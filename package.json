@@ -1,9 +1,0 @@
-{
-  "name": "legal-aid-timekeeping",
-  "version": "1.0.0",
-  "description": "AI-powered timekeeping assistant for legal aid organizations — LSC 45 CFR Parts 1630 & 1635 compliant activity classification and time entry formatting.",
-  "private": true,
-  "engines": {
-    "node": ">=18"
-  }
-}
