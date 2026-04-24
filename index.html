@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal Aid Timekeeping Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg2: #f7f7f5; --bg3: #f0f0ec;
+      --text: #1a1a18; --text2: #6b6b67;
+      --border: rgba(0,0,0,0.13); --border2: rgba(0,0,0,0.22);
+      --radius: 10px; --radius-sm: 6px;
+      --green-bg:#EAF3DE; --green-txt:#27500A;
+      --blue-bg:#E6F1FB; --blue-txt:#0C447C;
+      --amber-bg:#FAEEDA; --amber-txt:#633806;
+      --gray-bg:#F1EFE8; --gray-txt:#444441;
+      --red-bg:#FCEBEB; --red-txt:#791F1F;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 700px; margin: 0 auto; }
+    .header { margin-bottom: 1.75rem; }
+    .header h1 { font-size: 21px; font-weight: 500; margin-bottom: 4px; }
+    .header p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .reg { display:inline-block; margin-top:7px; font-size:11px; background:var(--blue-bg); color:var(--blue-txt); padding:2px 10px; border-radius:99px; }
+    .card { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:1.5rem; }
+    .tabs { display:flex; border-bottom:0.5px solid var(--border); background:var(--bg2); }
+    .tab { flex:1; padding:11px 16px; font-size:14px; background:none; border:none; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent; }
+    .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--text); background:var(--bg); }
+    .panel { display:none; padding:1.25rem; }
+    .panel.active { display:block; }
+    .helper { font-size:13px; color:var(--text2); line-height:1.6; margin-bottom:10px; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+    .chip { font-size:12px; padding:3px 11px; border:0.5px solid var(--border2); border-radius:99px; cursor:pointer; color:var(--text2); background:var(--bg); }
+    .chip:hover { background:var(--bg2); color:var(--text); }
+    textarea { width:100%; min-height:84px; padding:9px 11px; font-size:15px; font-family:inherit; line-height:1.6; border:0.5px solid var(--border2); border-radius:var(--radius-sm); background:var(--bg); color:var(--text); resize:vertical; }
+    textarea:focus { outline:none; border-color:var(--text); }
+    .field-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .field { display:flex; flex-direction:column; gap:3px; }
+    .field label { font-size:12px; color:var(--text2); }
+    .field input { padding:6px 10px; font-size:14px; font-family:inherit; border:0.5px solid var(--border2); border-radius:var(--radius-sm); background:var(--bg); color:var(--text); width:155px; }
+    .btn { margin-top:10px; padding:7px 18px; font-size:14px; font-weight:500; border:0.5px solid var(--border2); border-radius:var(--radius-sm); background:var(--text); color:var(--bg); cursor:pointer; }
+    .btn:hover { opacity:0.85; }
+    .btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .btn-ghost { background:var(--bg); color:var(--text); }
+    .btn-ghost:hover { background:var(--bg2); opacity:1; }
+    .result { margin-top:1.1rem; border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .result-head { padding:11px 14px; display:flex; align-items:center; gap:9px; border-bottom:0.5px solid var(--border); background:var(--bg2); }
+    .badge { font-size:12px; font-weight:500; padding:2px 9px; border-radius:99px; }
+    .badge-case { background:var(--green-bg); color:var(--green-txt); }
+    .badge-matter { background:var(--blue-bg); color:var(--blue-txt); }
+    .badge-admin { background:var(--amber-bg); color:var(--amber-txt); }
+    .badge-unclear { background:var(--gray-bg); color:var(--gray-txt); }
+    .rh-label { font-size:14px; font-weight:500; }
+    .result-body { padding:12px 14px; }
+    .rl { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:.06em; margin-top:10px; margin-bottom:2px; }
+    .rl:first-child { margin-top:0; }
+    .rv { font-size:14px; line-height:1.6; }
+    .conf-row { display:flex; align-items:center; gap:8px; margin-top:3px; }
+    .conf-bg { flex:1; background:var(--bg2); border-radius:4px; height:5px; }
+    .conf-fill { height:5px; border-radius:4px; }
+    .conf-pct { font-size:12px; color:var(--text2); min-width:32px; }
+    .tip { margin-top:10px; padding:9px 11px; background:var(--bg2); border-radius:var(--radius-sm); font-size:13px; color:var(--text2); line-height:1.6; border-left:3px solid var(--border2); }
+    .fe { margin-top:1.1rem; border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .fe-head { padding:9px 13px; background:var(--bg2); font-size:13px; font-weight:500; color:var(--text2); display:flex; justify-content:space-between; align-items:center; border-bottom:0.5px solid var(--border); }
+    .fe-row { display:grid; padding:9px 13px; gap:3px; border-bottom:0.5px solid var(--border); }
+    .fe-row:last-child { border-bottom:none; }
+    .fe-l { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:.06em; }
+    .fe-v { font-size:13px; margin-top:2px; line-height:1.5; }
+    .sm-btn { font-size:12px; padding:3px 9px; border:0.5px solid var(--border2); border-radius:var(--radius-sm); background:none; color:var(--text2); cursor:pointer; }
+    .sm-btn:hover { background:var(--bg); }
+    .divider { height:0.5px; background:var(--border); margin:1.25rem 0; }
+    .session-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .session-lbl { font-size:13px; color:var(--text2); }
+    .log-wrap { border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .log-table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+    .log-table th { text-align:left; padding:7px 9px; font-size:11px; font-weight:500; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; border-bottom:0.5px solid var(--border); background:var(--bg2); }
+    .log-table td { padding:7px 9px; border-bottom:0.5px solid var(--border); vertical-align:top; word-wrap:break-word; }
+    .log-table tr:last-child td { border-bottom:none; }
+    .dl-row { margin-top:9px; display:flex; justify-content:flex-end; }
+    .loading { padding:12px 0; display:flex; align-items:center; gap:9px; font-size:14px; color:var(--text2); }
+    .dots span { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--text2); animation:blink 1.2s infinite; margin-right:3px; }
+    .dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
+    @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+    .error { margin-top:9px; padding:9px 13px; background:var(--red-bg); color:var(--red-txt); border-radius:var(--radius-sm); font-size:13px; line-height:1.5; }
+    .empty-note { font-size:13px; color:var(--text2); }
+    .footer { text-align:center; font-size:12px; color:var(--text2); margin-top:1.75rem; line-height:1.9; }
+
+    /* API key setup banner */
+    .setup-banner { background:var(--amber-bg); color:var(--amber-txt); border:0.5px solid var(--amber-txt); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1.5rem; font-size:13px; line-height:1.7; }
+    .setup-banner strong { font-weight:600; display:block; margin-bottom:4px; font-size:14px; }
+    .key-row { display:flex; gap:8px; margin-top:10px; }
+    .key-input { flex:1; padding:7px 10px; font-size:13px; font-family:monospace; border:0.5px solid var(--amber-txt); border-radius:var(--radius-sm); background:white; color:#333; }
+    .key-btn { padding:7px 14px; font-size:13px; font-weight:500; border:0.5px solid var(--amber-txt); border-radius:var(--radius-sm); background:var(--amber-txt); color:white; cursor:pointer; }
+    .connected { background:var(--green-bg); color:var(--green-txt); border-color:var(--green-txt); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Legal Aid Timekeeping Assistant</h1>
+    <p>AI-powered activity classification and time entry formatting for LSC grant reporting.</p>
+    <span class="reg">Based on LSC 45 CFR Parts 1630 &amp; 1635</span>
+  </div>
+
+  <div id="setup-banner" class="setup-banner">
+    <strong>&#9881; One-time setup — enter your Anthropic API key</strong>
+    Your key is stored only in this browser session and never sent anywhere except directly to Anthropic.
+    Get a key at <a href="https://console.anthropic.com" target="_blank" style="color:inherit">console.anthropic.com</a> → API Keys.
+    <div class="key-row">
+      <input class="key-input" id="key-input" type="password" placeholder="sk-ant-..." />
+      <button class="key-btn" onclick="saveKey()">Connect</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="tab-cl" onclick="switchTab('cl')">Activity classifier</button>
+      <button class="tab" id="tab-en" onclick="switchTab('en')">Time entry formatter</button>
+    </div>
+
+    <div class="panel active" id="panel-cl">
+      <p class="helper">Describe what you did. The AI classifies it as <strong>case</strong>, <strong>matter</strong>, or <strong>administrative</strong> under LSC grant rules and explains why.</p>
+      <div class="chips">
+        <span class="chip" onclick="setEx('cl','Attended the all-staff meeting about the office holiday schedule')">All-staff meeting</span>
+        <span class="chip" onclick="setEx('cl','Reviewed the file for citizenship attestation on case 4421')">File review</span>
+        <span class="chip" onclick="setEx('cl','Gave a presentation at the community center about tenant rights')">Community ed</span>
+        <span class="chip" onclick="setEx('cl','Called opposing counsel to negotiate settlement on the Smith case')">Case call</span>
+        <span class="chip" onclick="setEx('cl','Attended CLE on immigration law updates')">CLE training</span>
+        <span class="chip" onclick="setEx('cl','Supervised paralegal on the Jones family law matter')">Supervision</span>
+        <span class="chip" onclick="setEx('cl','Intake screening for walk-in client, no case opened')">Intake screening</span>
+        <span class="chip" onclick="setEx('cl','Updated the housing law desk manual for the office')">Desk manual</span>
+      </div>
+      <textarea id="cl-input" placeholder="e.g. Met with client to review housing court documents and prepare for the hearing…"></textarea>
+      <button class="btn" id="cl-btn" onclick="runClassifier()">Classify activity</button>
+      <div id="cl-result"></div>
+    </div>
+
+    <div class="panel" id="panel-en">
+      <p class="helper">Describe what you did in plain language. The AI produces a structured, LSC-compliant time entry with the correct activity code.</p>
+      <div class="chips">
+        <span class="chip" onclick="setEx('en','Case 1245, called attorney John Smith about settlement, half an hour')">Phone call</span>
+        <span class="chip" onclick="setEx('en','Drafted motion to dismiss for client Maria Torres, case 889, 1.5 hrs')">Drafting</span>
+        <span class="chip" onclick="setEx('en','Intake screening for walk-in client with housing issue, 20 minutes')">Intake</span>
+        <span class="chip" onclick="setEx('en','Reviewed lease and advised client on eviction timeline, case 330, 45 min')">Advice</span>
+        <span class="chip" onclick="setEx('en','Community legal education presentation on benefits rights, 2 hours')">Community ed</span>
+      </div>
+      <textarea id="en-input" placeholder="e.g. Case 1245, called attorney John Smith about settlement, half an hour…"></textarea>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="en-date" /></div>
+        <div class="field"><label>Attorney name (optional)</label><input type="text" id="en-atty" placeholder="Your name" style="width:180px" /></div>
+      </div>
+      <button class="btn" id="en-btn" onclick="runFormatter()">Format entry</button>
+      <div id="en-result"></div>
+      <div class="divider"></div>
+      <div class="session-head">
+        <span class="session-lbl">Session log (<span id="entry-count">0</span> entries)</span>
+        <button class="sm-btn" onclick="clearEntries()">Clear all</button>
+      </div>
+      <div id="entries-area"><p class="empty-note">Formatted entries appear here. Download as CSV when done.</p></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Built for legal aid grant compliance &nbsp;·&nbsp; LSC 45 CFR Parts 1630 &amp; 1635<br>
+    This tool assists with classification — verify final determinations with your compliance officer.
+  </div>
+</div>
+
+<script>
+  var API_KEY = '';
+  var sessionEntries = [];
+  var today = new Date().toISOString().split('T')[0];
+  var pendingEntry = null;
+  document.getElementById('en-date').value = today;
+
+  function saveKey() {
+    var k = document.getElementById('key-input').value.trim();
+    if (!k || !k.startsWith('sk-')) { alert('Please enter a valid Anthropic API key starting with sk-'); return; }
+    API_KEY = k;
+    var banner = document.getElementById('setup-banner');
+    banner.className = 'setup-banner connected';
+    banner.innerHTML = '<strong>&#10003; Connected</strong>The API key is set for this session. You can now use the classifier and formatter.';
+  }
+
+  function switchTab(t) {
+    ['cl','en'].forEach(function(id) {
+      document.getElementById('tab-'+id).classList.toggle('active', id===t);
+      document.getElementById('panel-'+id).classList.toggle('active', id===t);
+    });
+  }
+
+  function setEx(tab, text) { document.getElementById(tab+'-input').value = text; }
+
+  function showLoading(id) {
+    document.getElementById(id).innerHTML = '<div class="loading"><div class="dots"><span></span><span></span><span></span></div>Analyzing&hellip;</div>';
+  }
+
+  function showError(id, msg) {
+    document.getElementById(id).innerHTML = '<div class="error">'+msg+'</div>';
+  }
+
+  async function callClaude(system, message) {
+    if (!API_KEY) { throw new Error('Please enter your API key in the setup banner above.'); }
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: system,
+        messages: [{ role: 'user', content: message }]
+      })
+    });
+    if (!resp.ok) {
+      var err = await resp.json().catch(function(){return {};});
+      throw new Error(err.error && err.error.message ? err.error.message : 'API error '+resp.status);
+    }
+    var data = await resp.json();
+    var text = data.content.filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
+    return JSON.parse(text.replace(/```json|```/g,'').trim());
+  }
+
+  var CL_SYS = 'You are an expert on Legal Services Corporation (LSC) grant compliance under 45 CFR Parts 1630 and 1635. Classify activities into one of four categories:\n\nCASE: Direct legal assistance to specific clients — litigation, administrative proceedings, negotiations, advice, brief services, transactional assistance, or case oversight (supervisor reviewing a specific file for compliance, closing codes, quality control).\n\nMATTER: Program services not tied to a specific case — community education, pro se clinics, general legal information, training, CLE, general supervision of program services, desk manuals, PAI recruitment, referral, intake where no case is opened, tracking substantive law.\n\nADMINISTRATIVE: General office operations unconnected to any grant/case/matter — staff meetings about operations, HR, facilities. Indirect costs under 45 CFR 1630.5(e).\n\nUNCLEAR: Insufficient information.\n\nRespond ONLY with valid JSON, no markdown:\n{"category":"CASE","confidence":85,"reasoning":"2-3 sentences with regulatory basis","tip":"One practical guidance sentence","billable":true,"billing_note":"One sentence on grant chargeability"}';
+
+  var EN_SYS = 'You are a legal aid timekeeping assistant. Convert natural language into structured LSC-compliant time entries.\n\nActivity codes: LT=Litigation, AD=Administrative proceedings, NG=Negotiations, AV=Advice/brief services, TX=Transactional assistance, CO=Case oversight, CE=Community education/matter, TR=Training/CLE, IN=Intake no case opened, OT=Other matter, AT=Administrative/indirect.\n\nHours: "half an hour"=0.5, "20 minutes"=0.33, "quarter hour"=0.25, "45 minutes"=0.75, "1 hour"=1.0. Round to nearest 0.25.\n\nDescription: clean professional third-person sentence under 15 words.\n\nRespond ONLY with valid JSON, no markdown:\n{"case_number":"1245 or MATTER or ADMIN","activity_code":"AV","activity_label":"Advice and brief services","description":"Professional description.","hours":0.5,"category":"CASE","notes":"clarification or empty string"}';
+
+  async function runClassifier() {
+    var input = document.getElementById('cl-input').value.trim();
+    if (!input) return;
+    var btn = document.getElementById('cl-btn');
+    btn.disabled = true;
+    showLoading('cl-result');
+    try {
+      var r = await callClaude(CL_SYS, input);
+      renderCL(r);
+    } catch(e) { showError('cl-result', e.message); }
+    btn.disabled = false;
+  }
+
+  function renderCL(r) {
+    var labels = {CASE:'Case time',MATTER:'Matter time',ADMINISTRATIVE:'Administrative / indirect',UNCLEAR:'Unclear — more info needed'};
+    var badges = {CASE:'badge-case',MATTER:'badge-matter',ADMINISTRATIVE:'badge-admin',UNCLEAR:'badge-unclear'};
+    var cat = r.category||'UNCLEAR';
+    var conf = Math.min(100,Math.max(0,r.confidence||0));
+    var col = conf>75?'#639922':conf>45?'#BA7517':'#A32D2D';
+    document.getElementById('cl-result').innerHTML =
+      '<div class="result">'+
+        '<div class="result-head"><span class="badge '+(badges[cat]||'badge-unclear')+'">'+cat+'</span><span class="rh-label">'+(labels[cat]||cat)+'</span></div>'+
+        '<div class="result-body">'+
+          '<div class="rl">Confidence</div>'+
+          '<div class="conf-row"><div class="conf-bg"><div class="conf-fill" style="width:'+conf+'%;background:'+col+'"></div></div><span class="conf-pct">'+conf+'%</span></div>'+
+          '<div class="rl">Reasoning</div><div class="rv">'+(r.reasoning||'')+'</div>'+
+          '<div class="rl">Grant billability</div><div class="rv">'+(r.billable?'&#10003; ':'&#10007; ')+(r.billing_note||'')+'</div>'+
+          '<div class="tip">'+(r.tip||'')+'</div>'+
+        '</div>'+
+      '</div>';
+  }
+
+  async function runFormatter() {
+    var input = document.getElementById('en-input').value.trim();
+    if (!input) return;
+    var btn = document.getElementById('en-btn');
+    btn.disabled = true;
+    showLoading('en-result');
+    var dateVal = document.getElementById('en-date').value||today;
+    var attyVal = document.getElementById('en-atty').value.trim()||'[Attorney]';
+    try {
+      var r = await callClaude(EN_SYS, input);
+      pendingEntry = {date:dateVal,attorney:attyVal,caseNum:r.case_number||'—',code:r.activity_code||'',label:r.activity_label||'',description:r.description||'',hours:parseFloat(r.hours)||0,category:r.category||''};
+      renderEN(r, dateVal, attyVal);
+    } catch(e) { showError('en-result', e.message); }
+    btn.disabled = false;
+  }
+
+  function renderEN(r, dateVal, attyVal) {
+    var hrs = (parseFloat(r.hours)||0).toFixed(2);
+    var notes = r.notes ? '<div class="fe-row"><div class="fe-l">Note</div><div class="fe-v" style="color:var(--text2)">'+r.notes+'</div></div>' : '';
+    document.getElementById('en-result').innerHTML =
+      '<div class="fe">'+
+        '<div class="fe-head"><span>Formatted entry</span><button class="sm-btn" onclick="copyRow()">Copy</button></div>'+
+        '<div class="fe-row" style="grid-template-columns:1fr 1fr"><div><div class="fe-l">Date</div><div class="fe-v">'+dateVal+'</div></div><div><div class="fe-l">Attorney</div><div class="fe-v">'+attyVal+'</div></div></div>'+
+        '<div class="fe-row" style="grid-template-columns:1fr 1fr 70px"><div><div class="fe-l">Case / matter #</div><div class="fe-v">'+(r.case_number||'—')+'</div></div><div><div class="fe-l">Activity code</div><div class="fe-v">'+(r.activity_code||'')+' — '+(r.activity_label||'')+'</div></div><div><div class="fe-l">Hours</div><div class="fe-v">'+hrs+'</div></div></div>'+
+        '<div class="fe-row"><div class="fe-l">Description</div><div class="fe-v">'+(r.description||'')+'</div></div>'+
+        notes+
+        '<div class="fe-row"><button class="btn btn-ghost" onclick="addToSession()" style="margin-top:0">Add to session log</button></div>'+
+      '</div>';
+  }
+
+  function copyRow() {
+    if (!pendingEntry) return;
+    var e = pendingEntry;
+    navigator.clipboard && navigator.clipboard.writeText([e.date,e.attorney,e.caseNum,e.code,e.label,e.description,e.hours.toFixed(2),e.category].join('\t'));
+  }
+
+  function addToSession() {
+    if (!pendingEntry) return;
+    sessionEntries.push(pendingEntry);
+    pendingEntry = null;
+    document.getElementById('en-input').value = '';
+    document.getElementById('en-result').innerHTML = '';
+    renderSession();
+  }
+
+  function renderSession() {
+    document.getElementById('entry-count').textContent = sessionEntries.length;
+    if (!sessionEntries.length) {
+      document.getElementById('entries-area').innerHTML = '<p class="empty-note">Formatted entries appear here. Download as CSV when done.</p>';
+      return;
+    }
+    var rows = sessionEntries.map(function(e) {
+      var bc = e.category==='CASE'?'badge-case':e.category==='MATTER'?'badge-matter':'badge-admin';
+      return '<tr><td>'+e.date+'</td><td>'+e.caseNum+'</td><td>'+e.code+'</td><td style="max-width:200px">'+e.description+'</td><td style="text-align:right">'+e.hours.toFixed(2)+'</td><td><span class="badge '+bc+'" style="font-size:11px">'+e.category+'</span></td></tr>';
+    }).join('');
+    document.getElementById('entries-area').innerHTML =
+      '<div class="log-wrap"><table class="log-table"><thead><tr><th style="width:88px">Date</th><th style="width:76px">Case #</th><th style="width:46px">Code</th><th>Description</th><th style="width:46px;text-align:right">Hrs</th><th style="width:88px">Type</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div class="dl-row"><button class="btn" onclick="downloadCSV()">Download CSV</button></div>';
+  }
+
+  function clearEntries() { sessionEntries=[]; renderSession(); }
+
+  function downloadCSV() {
+    var h = 'Date,Attorney,Case Number,Activity Code,Activity Label,Description,Hours,Category\n';
+    var r = sessionEntries.map(function(e){return [e.date,'"'+e.attorney+'"',e.caseNum,e.code,'"'+e.label+'"','"'+e.description.replace(/"/g,'""')+'"',e.hours.toFixed(2),e.category].join(',');}).join('\n');
+    var blob = new Blob([h+r],{type:'text/csv'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href=url; a.download='timekeeping_'+today+'.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
